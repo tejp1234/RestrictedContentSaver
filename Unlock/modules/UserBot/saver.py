@@ -124,6 +124,7 @@ async def saver(m: Message, chat_id: int, msg_id: int, chat_type: str, joining_l
 
     if msg.chat.has_protected_content == False:
         await processing_msg.edit_text("Bruh, the channel isn't even restricted...")
+        await ubot.leave_chat(chat_id)
         return None
     # Retrieve caption or fallback to text
     caption = msg.caption or msg.text or None
