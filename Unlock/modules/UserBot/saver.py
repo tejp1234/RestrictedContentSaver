@@ -33,6 +33,14 @@ import logging
 
 from pyrogram.types import Message
 from pyrogram.enums import MessageMediaType
+from pyrogram.errors import (
+    UserAlreadyParticipant, 
+    UserBannedInChannel, 
+    FloodWait, 
+    InviteHashExpired,
+    InviteHashInvalid,
+    ChannelPrivate
+)
 
 from ... import ubot, MAX_ALLOWED_DOWNLOAD_SIZE
 from .Special.UniversalDatabase import SD, channel_id, INVITE_LINK
@@ -71,17 +79,31 @@ async def saver(m: Message, chat_id: int, msg_id: int, chat_type: str, joining_l
     if chat_type == "private":
         try:
             await ubot.join_chat(joining_link)
+        except UserAlreadyParticipant:
+            pass
+        except FloodWait as e:
+            await processing_msg.edit_text(f"Due to too many requests at this time, I can't process your request..\n\nReason: Flood wait for {e.value}")
+            return None
+        except (InviteHashExpired, InviteHashInvalid, UserBannedInChannel):
+            await processing_msg.edit_text("I am either banned from this group/channel or the link has expired.....")
+            return None
         except Exception as e:
             logging.error("Failed to join chat: %s", e)
-            return "Can't join the chat"
+            await processing_msg.edit_text("Unable to join the private chat. Please verify the joining link.")
+            return None
 
     try:
         await ubot.join_chat(INVITE_LINK)
-    except:
+    except UserAlreadyParticipant:
         pass
+    except Exception as e:
+        logging.error(e)
     # Fetch the specified message
     try:
         msg = await ubot.get_messages(chat_id, int(msg_id))
+    except ChannelPrivate:
+        await processing_msg.edit_text(f"I am banned from this channel.")
+        return None
     except Exception as e:
         logging.error("Failed to fetch message: %s", e)
         await processing_msg.edit_text(f"Error: {e}")
@@ -173,7 +195,8 @@ async def saver(m: Message, chat_id: int, msg_id: int, chat_type: str, joining_l
                 datasave = True
         except Exception as e:
             logging.error(f"Error handling {file_type}: {e}")
-            return "ERROR WITH USERBOT"
+            await processing_msg.edit_text(f"Error: {e}")
+            return None
 
     try:
         os.remove(file_path)
@@ -184,6 +207,10 @@ async def saver(m: Message, chat_id: int, msg_id: int, chat_type: str, joining_l
     # Cache the file information if successfully saved
     if datasave:
         SD().write_data(cache_msg_id, msg.link, m.from_user.id, file_type)
+        try:
+            await ubot.leave_chat(chat_id)
+        except:
+            pass
         return {
             "IsCached": False,
             "Thumb": down_thumb or "Unlock/stark_thumb.jpg",
@@ -192,4 +219,8 @@ async def saver(m: Message, chat_id: int, msg_id: int, chat_type: str, joining_l
 
     # If media is unsupported
     await m.reply_text(msg.text)
+    try:
+        await ubot.leave_chat(chat_id)
+    except:
+        pass
     return None

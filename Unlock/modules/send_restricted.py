@@ -91,13 +91,7 @@ async def save_file(bot: Client, m: Message):
     save_result = await saver(m, chat_id, msg_id, chat_type, joining_link, processing_msg)
 
     # Handle potential errors
-    if save_result == "Can't join the chat":
-        await m.reply_text("Unable to join the private chat. Please verify the joining link.")
-        return await processing_msg.delete()
-    elif save_result == "ERROR WITH USERBOT":
-        await m.reply_text("An error occurred while saving the file. Please try again.")
-        return await processing_msg.delete()
-    elif save_result == None:
+    if save_result == None:
         return
 
     # Handle successful save
@@ -116,4 +110,7 @@ async def save_file(bot: Client, m: Message):
 
     # Leave the private chat if applicable
     if chat_type == "private":
-        await ubot.leave_chat(chat_id)
+        try:
+            await ubot.leave_chat(chat_id)
+        except:
+            pass
