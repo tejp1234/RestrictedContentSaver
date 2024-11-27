@@ -100,7 +100,7 @@ Logs are automatically created during bot runtime to help track errors and user 
 
 ## Contributing
 
-We welcome contributions! Please check [contribution guidelines](https://github.com/StarkBotsIndustries/RestrictedContentSaver/CONTRIBUTING.MD).
+We welcome contributions! Please check [contribution guidelines](https://github.com/StarkBotsIndustries/RestrictedContentSaver/blob/main/CONTRIBUTING.MD).
 
 ---
 
